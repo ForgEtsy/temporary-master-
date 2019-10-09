@@ -1,27 +1,48 @@
 // double check file path
-import products from './products.json';
-import reviews from './reviews.json';
+const products = require('./products.js');
+// import reviews from './reviews.json';
+const { port } = require('./server/server.js')
 
 /** import YOUR port number here */
 
 const mongoose = require('mongoose');
-mongoose.connect('YOUR LOCALHOST', {useNewUrlParser: true})
+mongoose.connect(`mongodb://localhost:${port}/products`, {useNewUrlParser: true})
 //connect that shit
 
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
-  // we're connected!
+  console.log(`we're connected!`)
+
+})
+const imagesSchema = new mongoose.Schema({
+  listing_image_id: Number,
+  listing_id: Number,
+  url_75x75: String,
+  url_170x135: String,
+  url_570xN: String,
+  url_fullxfull: String,
+  full_height: Number,
+  full_width: Number,
 })
 
-
 const productSchema = new mongoose.Schema({
-  product_id: {
+  listing_id: { // <-- product id
     type: Number,
     unique: true,
   },
-  product_title: String,
-  product_description: String,
+  title: String,
+  description: String,
+  price: Number,
+  category_path: [String],
+  Images: [imagesSchema],
+  Shop: {
+    shop_id: Number,
+    shop_name: String,
+    title: String,
+    icon_url_fullxfull: String,
+  },
+  
   product_options: {
     option_1: {
       title: String,
@@ -45,36 +66,6 @@ const productSchema = new mongoose.Schema({
       description_4: String,
     },
   },
-  price: Number,
-  category_name: String,
-  company_name: String,
-  company_location: String,
-  company_owner: String,
-  company_rating: Number,
-  image1_title: String,
-  image1_url_large: String,
-  image1_url_small: String,
-  image2_title: String,
-  image2_url_large: String,
-  image2_url_small: String,
-  image3_title: String,
-  image3_url_large: String,
-  image3_url_small: String,
-  image4_title: String,
-  image4_url_large: String,
-  image4_url_small: String,
-  image5_title: String,
-  image5_url_large: String,
-  image5_url_small: String,
-  image6_title: String,
-  image6_url_large: String,
-  image6_url_small: String,
-  image7_title: String,
-  image7_url_large: String,
-  image7_url_small: String,
-  image8_title: String,
-  image8_url_large: String,
-  image8_url_small: String,
 });
 
 const reviewSchema = new mongoose.Schema({
@@ -98,12 +89,14 @@ const Reviews = mongoose.model('Reviews', reviewSchema);
 
 const productsSave = products => {
   Products.insertMany(products)
-    .tap(() => {
+    .then((data) => {
       console.log('...Saved products to database...')
+      return data
     })
-    .then(() => {
+    .then((data) => {
       // retrieve all the database thingies
       // or whatever you need specifically
+      return data;
     })
     .then((data) => {
       // populate component with data
@@ -112,8 +105,9 @@ const productsSave = products => {
       console.log('...product saving err... :(');
     })
 }
+productsSave(products.results);
 
-const reviewsSave = review => {
+const reviewsSave = reviews => {
   Reviews.insertMany(reviews)
     .tap(() => {
       console.log('...Saved reviews to database...')
